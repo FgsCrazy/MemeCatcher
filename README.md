@@ -3,7 +3,7 @@
 Ein Partyspiel im Browser: Ein Meme-Clip läuft **stumm**, und du sprichst ihn ein – Text, Timing und Tonlage.
 Danach hören sich alle die Versionen an, stimmen über die lustigste ab, und zum Schluss wird das **Original** aufgedeckt.
 
-**Spielen:** https://fgscrazy.github.io/MemeCatcher/
+**Spielen:** https://memecatcher.lativlabs.com
 
 ## Spielmodi
 
