@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meme Catcher</title>
+<style>
+  :root{
+    --bg:#0a0a16; --text:#f4f2ff; --muted:#a49fc4; --line:rgba(255,255,255,.12);
+    --glass:rgba(255,255,255,.06); --glass2:rgba(255,255,255,.1);
+    --yellow:#ffd23f; --yellow-d:#c48f00; --pink:#ff3d8b; --pink-d:#a8155a;
+    --blue:#3dc6ff; --green:#36e39a; --purple:#9b6bff;
+    --usr:#ff3d8b; --ref:#3dc6ff; --ok:#36e39a;
+    --display:"Arial Black","Segoe UI Black","Segoe UI",Impact,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{min-height:100%}
+  body{margin:0;font-family:"Segoe UI",system-ui,Roboto,sans-serif;color:var(--text);line-height:1.45;background:var(--bg);overflow-x:hidden}
+  body::before{content:"";position:fixed;inset:-20%;z-index:-2;
+    background:
+      radial-gradient(40% 35% at 15% 20%, rgba(155,107,255,.35), transparent 70%),
+      radial-gradient(35% 30% at 85% 15%, rgba(255,61,139,.28), transparent 70%),
+      radial-gradient(45% 40% at 70% 90%, rgba(61,198,255,.22), transparent 70%),
+      radial-gradient(30% 30% at 10% 90%, rgba(255,210,63,.14), transparent 70%);
+    animation:drift 24s ease-in-out infinite alternate}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;opacity:.5;
+    background-image:radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);background-size:22px 22px}
+  @keyframes drift{to{transform:translate(4%,-3%) rotate(6deg)}}
+
+  /* ---------- Kopfzeile ---------- */
+  header{display:flex;align-items:center;gap:12px;padding:14px 22px;position:sticky;top:0;z-index:20;
+    background:linear-gradient(rgba(10,10,22,.85),rgba(10,10,22,.55));backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .minilogo{font-family:var(--display);font-size:20px;letter-spacing:.5px;cursor:pointer;user-select:none;white-space:nowrap}
+  .minilogo b{color:var(--yellow)}
+  header nav{display:flex;gap:8px;margin-left:auto}
+  main{max-width:920px;margin:0 auto;padding:22px 18px 60px}
+
+  /* ---------- Typo ---------- */
+  h2{font-family:var(--display);margin:0 0 10px;font-size:26px;letter-spacing:.3px}
+  h3{margin:0 0 6px;font-size:18px}
+  p{margin:6px 0}
+  .hint{color:var(--muted);font-size:14px}
+  .center{text-align:center}
+  .kicker{font-family:var(--display);font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- Karten & Screens ---------- */
+  .card{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:16px;
+    backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  .screen{animation:pop .38s cubic-bezier(.2,1.3,.4,1)}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}}
+
+  /* ---------- Knöpfe ---------- */
+  button{font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;border:0;border-radius:14px;padding:12px 20px;margin:5px 6px 5px 0;
+    color:#2a1800;background:linear-gradient(180deg,#ffe27a,var(--yellow));
+    box-shadow:0 5px 0 var(--yellow-d),0 10px 20px rgba(0,0,0,.3);transition:transform .08s,box-shadow .08s,filter .15s}
+  button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--yellow-d),0 4px 8px rgba(0,0,0,.3)}
+  button.sec{color:var(--text);background:var(--glass2);box-shadow:0 4px 0 rgba(0,0,0,.35);border:1px solid var(--line)}
+  button.sec:active{box-shadow:0 1px 0 rgba(0,0,0,.35)}
+  button.pink{color:#fff;background:linear-gradient(180deg,#ff6fa8,var(--pink));box-shadow:0 5px 0 var(--pink-d),0 10px 20px rgba(0,0,0,.3)}
+  button.danger{color:#fff;background:linear-gradient(180deg,#ff6b6b,#d63a3a);box-shadow:0 4px 0 #8a1f1f}
+  button.small{padding:7px 12px;font-size:13px;border-radius:10px}
+  button.big{font-family:var(--display);font-size:24px;padding:18px 40px;border-radius:18px;letter-spacing:1px}
+  button:disabled{opacity:.4;cursor:default;transform:none;filter:none}
+
+  /* ---------- Formulare ---------- */
+  input,textarea,select{width:100%;background:rgba(0,0,0,.35);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;font-family:inherit}
+  input:focus,textarea:focus{outline:2px solid var(--purple);border-color:transparent}
+  input[type=checkbox],input[type=radio]{width:auto}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px;font-weight:600}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:140px}
+  .warn{background:rgba(255,210,63,.1);border:1px solid rgba(255,210,63,.35);color:#ffe59a;border-radius:12px;padding:10px 14px;font-size:14px;margin:8px 0}
+  .err{background:rgba(255,61,90,.12);border:1px solid rgba(255,61,90,.4);color:#ffb3c4;border-radius:12px;padding:10px 14px;margin:8px 0}
+  .badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--glass2);color:var(--muted);margin:0 4px 4px 0;vertical-align:middle}
+  .badge.ok{background:rgba(54,227,154,.15);color:var(--green)}
+  .badge.gold{background:rgba(255,210,63,.15);color:var(--yellow)}
+  .badge.pinkb{background:rgba(255,61,139,.15);color:#ff8fbd}
+
+  /* ---------- Video ---------- */
+  #ytwrap{position:relative;aspect-ratio:16/9;background:#000;border-radius:22px;overflow:hidden;margin-bottom:16px;
+    border:2px solid rgba(255,255,255,.12);box-shadow:0 0 0 6px rgba(155,107,255,.12),0 20px 60px rgba(0,0,0,.5)}
+  #ytwrap.hidden{aspect-ratio:auto;height:0;margin:0;border:0;box-shadow:none}
+  #ytwrap iframe{width:100%;height:100%;display:block}
+  #ytcover{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 40%,#2a1d55,#0b0b18 70%)}
+  #ytcover .ic{font-size:64px;animation:bob 2.4s ease-in-out infinite}
+  #ytcover .tx{font-family:var(--display);color:var(--muted);letter-spacing:2px;font-size:14px}
+  #ytcover.off{display:none}
+  @keyframes bob{50%{transform:translateY(-8px) rotate(-4deg)}}
+
+  /* ---------- Titelbildschirm ---------- */
+  .hero{text-align:center;padding:26px 0 10px;position:relative}
+  .logo{font-family:var(--display);line-height:.9;font-size:clamp(54px,11vw,104px);letter-spacing:1px;display:inline-block;transform:rotate(-3deg);animation:wobble 4s ease-in-out infinite}
+  .logo .l1{display:block;color:#fff;text-shadow:0 5px 0 #6a4bd6,0 10px 30px rgba(155,107,255,.6)}
+  .logo .l2{display:block;color:var(--yellow);text-shadow:0 5px 0 var(--yellow-d),0 10px 30px rgba(255,210,63,.45)}
+  @keyframes wobble{50%{transform:rotate(-1deg) scale(1.02)}}
+  .tagline{font-size:18px;color:#d9d4ff;margin:18px auto 22px;max-width:560px}
+  .floaty{position:absolute;font-size:40px;opacity:.85;animation:float 6s ease-in-out infinite;pointer-events:none}
+  @keyframes float{50%{transform:translateY(-14px) rotate(8deg)}}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .step{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:center}
+  .step .ic{font-size:34px}
+  .step b{display:block;font-family:var(--display);margin:6px 0 2px;font-size:15px}
+  @media(max-width:640px){.steps{grid-template-columns:1fr}}
+
+  /* ---------- Spieler ---------- */
+  .avatar{width:46px;height:46px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto;
+    box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.3)}
+  .avatar.lg{width:84px;height:84px;font-size:46px}
+  .prow{display:flex;gap:10px;align-items:center;margin:8px 0}
+  .prow input{flex:1}
+  .prow .avatar{cursor:pointer;border:0;padding:0;margin:0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:12px 0}
+  .chip{display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;background:var(--glass2);border:2px solid transparent;
+    cursor:pointer;font-weight:800;color:var(--text);box-shadow:none;margin:0}
+  .chip .avatar{width:34px;height:34px;font-size:18px}
+  .chip.on{border-color:var(--yellow);background:rgba(255,210,63,.15);transform:translateY(-2px)}
+  .chip:active{transform:scale(.97)}
+  .stepper{display:flex;align-items:center;gap:10px}
+  .stepper b{font-family:var(--display);font-size:26px;min-width:40px;text-align:center}
+  .stepper button{margin:0;padding:6px 14px}
+  .switch{display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--text);font-size:15px;font-weight:700;margin:12px 0;user-select:none}
+  .switch input{display:none}
+  .switch i{width:46px;height:26px;border-radius:999px;background:rgba(255,255,255,.15);position:relative;transition:.2s;flex:0 0 auto}
+  .switch i::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+  .switch input:checked + i{background:var(--green)}
+  .switch input:checked + i::after{left:23px}
+  button.switch{background:none;box-shadow:none;border:0;padding:4px 0;border-radius:0;color:var(--text);font-weight:700;font-size:15px;filter:none;transform:none;text-align:left}
+  button.switch:active{box-shadow:none;transform:none}
+  button.switch.on i{background:var(--green)}
+  button.switch.on i::after{left:23px}
+
+  /* ---------- Runden-Intro & Zug ---------- */
+  .banner{text-align:center;padding:30px 10px}
+  .banner .bigtxt{font-family:var(--display);font-size:clamp(48px,10vw,88px);line-height:1;color:var(--yellow);text-shadow:0 5px 0 var(--yellow-d);animation:slam .5s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes slam{from{transform:scale(2.2);opacity:0}}
+  .turn{display:flex;align-items:center;gap:16px;margin-bottom:10px}
+  .turn h2{margin:0}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+  @media(max-width:640px){.modes{grid-template-columns:1fr}}
+  .mode{text-align:left;margin:0;padding:16px;border-radius:18px;display:block;width:100%}
+  .mode .t{font-family:var(--display);font-size:18px;display:block}
+  .mode .d{font-weight:600;font-size:13px;opacity:.85;display:block;margin-top:2px}
+  .mult{font-family:var(--display);font-size:22px;color:var(--yellow)}
+
+  /* ---------- Countdown & Aufnahme ---------- */
+  .count{font-family:var(--display);font-size:140px;text-align:center;color:var(--yellow);line-height:1.1;text-shadow:0 8px 0 var(--yellow-d),0 0 60px rgba(255,210,63,.5);animation:slam .45s cubic-bezier(.2,1.6,.4,1)}
+  .recbadge{display:inline-flex;align-items:center;gap:8px;background:#ff2d55;color:#fff;padding:8px 18px;border-radius:999px;font-family:var(--display);letter-spacing:1px;box-shadow:0 0 30px rgba(255,45,85,.6);animation:pulse 1s infinite}
+  @keyframes pulse{50%{box-shadow:0 0 6px rgba(255,45,85,.3);opacity:.85}}
+  .spinner{width:56px;height:56px;border-radius:50%;border:6px solid rgba(255,255,255,.12);border-top-color:var(--yellow);animation:spin .8s linear infinite;margin:16px auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- Sprech-Spur ---------- */
+  .cue{margin:14px 0 4px}
+  .track{position:relative;height:20px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden}
+  .track i{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,var(--blue),#7fdcff);border-radius:6px;opacity:.75}
+  .track b{position:absolute;top:0;bottom:0;width:3px;margin-left:-1px;background:#fff;box-shadow:0 0 10px #fff}
+  .signal{text-align:center;font-family:var(--display);font-size:24px;min-height:34px;margin-top:10px}
+  .signal.now{color:var(--green);text-shadow:0 0 20px rgba(54,227,154,.6)} .signal.soon{color:var(--yellow)}
+  .lyric{font-family:var(--display);font-size:30px;min-height:44px;text-align:center;line-height:1.25}
+  .lyric .done{color:var(--yellow)} .lyric .todo{color:#8d88aa}
+  .lyric.next{opacity:.55;font-size:22px}
+  .cuerow{display:flex;gap:8px;align-items:center;margin:6px 0}
+  .cuerow span{font-size:13px;color:var(--muted);white-space:nowrap;min-width:92px}
+  #holdbtn{width:100%;padding:26px;font-size:18px;touch-action:none}
+
+  /* ---------- Ergebnisse ---------- */
+  .res{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+  .scorebig{font-family:var(--display);font-size:46px;color:var(--yellow);text-shadow:0 4px 0 var(--yellow-d);line-height:1;text-align:right}
+  .rank{font-family:var(--display);font-size:22px;color:var(--muted);width:34px;text-align:center}
+  .bars{display:grid;grid-template-columns:80px 1fr 40px;gap:6px 10px;align-items:center;font-size:13px;margin:12px 0 4px;font-weight:700}
+  .bar{height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--purple),var(--pink),var(--yellow));border-radius:6px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+  canvas.chart{width:100%;height:160px;background:rgba(0,0,0,.3);border-radius:12px;display:block;margin-top:10px}
+  .legend{font-size:12px;color:var(--muted);margin-top:4px}
+  .legend b.r{color:var(--ref)} .legend b.u{color:var(--usr)}
+  .quote{font-style:italic;color:#e5e1ff}
+  .totals{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .totals span{background:var(--glass2);border-radius:999px;padding:4px 12px;font-weight:800;font-size:14px}
+
+  /* ---------- Podium ---------- */
+  .podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin:20px 0 6px}
+  .pod{display:flex;flex-direction:column;align-items:center;gap:6px;width:150px}
+  .pod .block{width:100%;border-radius:16px 16px 6px 6px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:10px;
+    font-family:var(--display);font-size:34px;color:#2a1800;animation:rise .8s cubic-bezier(.2,1.3,.4,1) both}
+  .pod .name{font-weight:800;text-align:center}
+  .pod .pts{font-family:var(--display);color:var(--yellow);font-size:20px}
+  @keyframes rise{from{transform:scaleY(0);transform-origin:bottom}}
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+
+  /* ---------- Online ---------- */
+  .roomcode{font-family:var(--display);font-size:clamp(44px,9vw,68px);letter-spacing:10px;color:var(--yellow);text-shadow:0 5px 0 var(--yellow-d);margin:4px 0 10px}
+  .invite{display:flex;gap:8px;align-items:center;max-width:560px;margin:8px auto}
+  .invite input{flex:1;font-size:14px}
+  .invite button{margin:0;white-space:nowrap}
+  .codein{text-transform:uppercase;text-align:center;font-family:var(--display);font-size:26px;letter-spacing:8px}
+  span.chip{cursor:default}
+
+  /* ---------- Editor ---------- */
+  .cliprow{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;border-top:1px solid var(--line);padding:12px 0}
+  .cliprow:first-child{border-top:0}
+  .cliprow .actions{white-space:nowrap}
+</style>
+</head>
+<body>
+<header>
+  <div class="minilogo" onclick="renderHome()">🎙️ MEME <b>CATCHER</b></div>
+  <nav>
+    <button class="sec small" id="soundbtn" onclick="toggleSound()">🔊</button>
+    <button class="sec small" onclick="renderEditor()">🎬 Clips</button>
+  </nav>
+</header>
+<main>
+  <div id="ytwrap" class="hidden"><div id="yt"></div><div id="ytcover"><div class="ic">🎬</div><div class="tx">GLEICH GEHT'S LOS</div></div></div>
+  <div id="panel"></div>
+</main>
+
+<script>
+/* ============================================================
+   Helpers
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+/* Zeigt einen neuen Bildschirm (mit kurzer Einblend-Animation) */
+function panel(html, anim = true){ $('#panel').innerHTML = `<div class="${anim ? 'screen' : ''}">${html}</div>`; }
+function showVideo(on){ $('#ytwrap').classList.toggle('hidden', !on); }
+/* Wartet auf einen Klick auf ein Element mit data-choice im Panel */
+function choose(){
+  return new Promise(r => {
+    document.querySelectorAll('#panel [data-choice]').forEach(b => b.onclick = () => { sfx.click(); r(b.dataset.choice); });
+  });
+}
+function setBusy(on){ document.querySelectorAll('#panel button').forEach(b => b.disabled = on); }
+
+function parseVideoId(url){
+  url = (url || '').trim();
+  if (/^[\w-]{11}$/.test(url)) return url;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtu.be')) return u.pathname.slice(1, 12);
+    if (u.searchParams.get('v')) return u.searchParams.get('v').slice(0, 11);
+    const m = u.pathname.match(/\/(shorts|embed|live)\/([\w-]{11})/);
+    if (m) return m[2];
+  } catch {}
+  return null;
+}
+function parseUrlStart(url){
+  try { const t = new URL(url).searchParams.get('t'); if (!t) return null;
+    const m = t.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/); if (!m) return null;
+    return (+(m[1]||0))*3600 + (+(m[2]||0))*60 + (+(m[3]||0));
+  } catch { return null; }
+}
+function parseTime(s){
+  s = String(s ?? '').trim().replace(',', '.');
+  if (!s) return NaN;
+  const p = s.split(':').map(Number);
+  if (p.some(isNaN)) return NaN;
+  return p.reduce((a, b) => a * 60 + b, 0);
+}
+function fmtTime(t){
+  const m = Math.floor(t / 60), s = t - m * 60;
+  return m + ':' + (s < 10 ? '0' : '') + (Math.round(s * 10) / 10);
+}
+
+/* ============================================================
+   Clip-Speicher (localStorage)
+   ============================================================ */
+const STORE = 'memecatcher.clips.v1';
+let clips = [];
+try { clips = JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { clips = []; }
+const saveClips = () => localStorage.setItem(STORE, JSON.stringify(clips));
+/* Starterpaket: fügt alle Clips aus starter-clips.json hinzu, die noch fehlen */
+async function loadStarter(){
+  const data = await (await fetch('starter-clips.json', { cache: 'no-store' })).json();
+  let added = 0;
+  for (const x of data) if (!clips.some(c => c.videoId === x.videoId)) { clips.push({ id: uid(), profile: null, ...x }); added++; }
+  saveClips();
+  return added;
+}
+
+/* ============================================================
+   YouTube-Player
+   ============================================================ */
+let player = null, stateHandler = null, errorHandler = null, resolveYt;
+const ytReady = new Promise(r => resolveYt = r);
+window.onYouTubeIframeAPIReady = () => {
+  player = new YT.Player('yt', {
+    width: '100%', height: '100%',
+    playerVars: { playsinline: 1, rel: 0, controls: 0, disablekb: 1, modestbranding: 1 },
+    events: {
+      onReady: () => resolveYt(),
+      onStateChange: e => stateHandler && stateHandler(e.data),
+      onError: e => errorHandler && errorHandler(e.data),
+    }
+  });
+};
+(() => { const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s); })();
+
+/* Spielt den Clip-Ausschnitt ab. onStart feuert, sobald das Video wirklich läuft. */
+/* Startet eine neue Wiedergabe, wird eine laufende abgebrochen (deren Promise schlägt fehl). */
+let segSeq = 0, cancelSeg = null;
+async function playSegment(clip, { muted = true, onStart, onTick } = {}){
+  await ytReady;
+  if (cancelSeg) cancelSeg();
+  const my = ++segSeq;
+  return new Promise((resolve, reject) => {
+    let started = false, done = false;
+    const finish = err => {
+      if (done) return; done = true;
+      clearInterval(poll); clearTimeout(timeout);
+      if (segSeq === my) {
+        cancelSeg = null; stateHandler = null; errorHandler = null;
+        try { player.pauseVideo(); } catch {}
+        $('#ytcover').classList.remove('off');
+      }
+      err ? reject(err) : resolve();
+    };
+    cancelSeg = () => finish(new Error('Wiedergabe abgebrochen'));
+    stateHandler = st => {
+      if (st === YT.PlayerState.PLAYING && !started) { started = true; $('#ytcover').classList.add('off'); onStart && onStart(); }
+      if (st === YT.PlayerState.ENDED && started) finish();
+    };
+    errorHandler = code => finish(new Error('YouTube-Fehler ' + code +
+      (code === 101 || code === 150 || code === 153 ? ' – der Ersteller erlaubt das Einbetten dieses Videos nicht (oder die Seite läuft nicht über einen Server).' : '')));
+    if (muted) player.mute(); else { player.unMute(); player.setVolume(100); }
+    player.loadVideoById({ videoId: clip.videoId, startSeconds: clip.start, endSeconds: clip.end });
+    /* Der Player meldet die Zeit nur grob – dazwischen wird mit der Uhr weitergezählt,
+       damit die Sprech-Spur flüssig läuft. */
+    let lastPT = -1, baseT = 0, basePerf = 0;
+    const poll = setInterval(() => {
+      if (!started || !player.getCurrentTime) return;
+      const pt = player.getCurrentTime();
+      if (pt !== lastPT) { lastPT = pt; baseT = pt; basePerf = performance.now(); }
+      if (onTick) onTick(Math.min(baseT + (performance.now() - basePerf) / 1000, clip.end) - clip.start);
+      if (pt >= clip.end - 0.05) finish();
+    }, 30);
+    const timeout = setTimeout(() => finish(started ? null : new Error('Das Video startet nicht.')),
+      (clip.end - clip.start) * 1000 + 20000);
+  });
+}
+
+/* ============================================================
+   Mikrofon, Aufnahme, Spracherkennung
+   ============================================================ */
+let micStream = null;
+async function getMic(){
+  if (!micStream) micStream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+  });
+  return micStream;
+}
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function startRecognition(){
+  if (!SR) return null;
+  const st = { final: '', interim: '', ended: false, error: null };
+  try {
+    const r = new SR();
+    r.lang = 'de-DE'; r.continuous = true; r.interimResults = true;
+    r.onresult = e => {
+      let fin = '', int = '';
+      for (let i = 0; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) fin += t + ' '; else int += t + ' ';
+      }
+      st.final = fin; st.interim = int;
+    };
+    r.onerror = e => { st.error = e.error; };
+    r.onend = () => { st.ended = true; };
+    r.start();
+    st.rec = r;
+  } catch (e) { st.error = 'start'; st.ended = true; }
+  return st;
+}
+async function stopRecognition(st){
+  if (!st) return { text: null, error: 'unsupported' };
+  await sleep(600);
+  try { st.rec && st.rec.stop(); } catch {}
+  const t0 = Date.now();
+  while (!st.ended && Date.now() - t0 < 2500) await sleep(80);
+  const text = (st.final + ' ' + st.interim).trim();
+  if (st.error && st.error !== 'no-speech' && !text) return { text: null, error: st.error };
+  return { text, error: st.error };
+}
+
+async function recordTake(clip, onStatus, onTick){
+  const stream = await getMic();
+  const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
+  const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  let recog = null;
+  try {
+    await playSegment(clip, { muted: true, onStart: () => {
+      rec.start(); recog = startRecognition(); onStatus && onStatus('rec');
+    }, onTick });
+  } catch (e) {
+    // Abgebrochen: Aufnahme und Spracherkennung sauber beenden
+    try { if (rec.state !== 'inactive') rec.stop(); } catch {}
+    try { recog && recog.rec && recog.rec.stop(); } catch {}
+    throw e;
+  }
+  if (rec.state !== 'inactive') await new Promise(r => { rec.onstop = r; rec.stop(); });
+  onStatus && onStatus('processing');
+  const tr = await stopRecognition(recog);
+  const blob = new Blob(chunks, { type: rec.mimeType || mime || 'audio/webm' });
+  return { blob, url: URL.createObjectURL(blob), transcript: tr.text, srError: tr.error };
+}
+
+/* ============================================================
+   Audio-Analyse: Lautstärke (Sprechphasen) + Tonhöhe (YIN)
+   ============================================================ */
+const HOP = 0.02, SRATE = 16000;
+const HELP_FACTOR = 0.7;   // Punkte-Faktor, wenn die Timeline aufgedeckt wurde
+let actx = null;
+const getCtx = () => actx || (actx = new (window.AudioContext || window.webkitAudioContext)());
+
+async function decodeBlob(blobOrFile){
+  const buf = await blobOrFile.arrayBuffer();
+  return await getCtx().decodeAudioData(buf);
+}
+async function toMono16k(buf, t0 = 0, t1 = buf.duration){
+  t0 = clamp(t0, 0, buf.duration); t1 = clamp(t1, t0, buf.duration);
+  const len = Math.max(1, Math.ceil((t1 - t0) * SRATE));
+  const off = new OfflineAudioContext(1, len, SRATE);
+  const src = off.createBufferSource();
+  src.buffer = buf; src.connect(off.destination); src.start(0, t0, t1 - t0);
+  const out = await off.startRendering();
+  return out.getChannelData(0);
+}
+function closeGaps(v, maxGap){
+  let last = -1;
+  for (let i = 0; i < v.length; i++) if (v[i]) {
+    if (last >= 0 && i - last - 1 <= maxGap) for (let j = last + 1; j < i; j++) v[j] = 1;
+    last = i;
+  }
+}
+function removeBlips(v, minLen){
+  let i = 0;
+  while (i < v.length) {
+    if (v[i]) { let j = i; while (j < v.length && v[j]) j++; if (j - i < minLen) for (let k = i; k < j; k++) v[k] = 0; i = j; }
+    else i++;
+  }
+}
+function analyzeSamples(x){
+  const hop = Math.round(HOP * SRATE), W = 400;
+  const minLag = Math.floor(SRATE / 600), maxLag = Math.ceil(SRATE / 70);
+  const frames = Math.max(0, Math.floor((x.length - W - maxLag) / hop) + 1);
+  const rms = new Float32Array(frames), f0 = new Float32Array(frames), d = new Float32Array(maxLag + 1);
+  for (let f = 0; f < frames; f++) {
+    const o = f * hop;
+    let e = 0;
+    for (let i = 0; i < W; i++) { const v = x[o + i]; e += v * v; }
+    rms[f] = Math.sqrt(e / W);
+    d[0] = 1; let run = 0, best = -1;
+    for (let tau = 1; tau <= maxLag; tau++) {
+      let s = 0;
+      for (let i = 0; i < W; i++) { const df = x[o + i] - x[o + i + tau]; s += df * df; }
+      run += s; d[tau] = run > 0 ? s * tau / run : 1;
+    }
+    for (let tau = minLag; tau <= maxLag; tau++) {
+      if (d[tau] < 0.15) { while (tau + 1 <= maxLag && d[tau + 1] < d[tau]) tau++; best = tau; break; }
+    }
+    if (best > 1) {
+      const a = d[best - 1], b = d[best], c = best + 1 <= maxLag ? d[best + 1] : b;
+      const den = a - 2 * b + c, shift = den ? 0.5 * (a - c) / den : 0;
+      f0[f] = SRATE / (best + clamp(shift, -1, 1));
+    }
+  }
+  const sorted = Array.from(rms).sort((a, b) => a - b);
+  const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
+  const thr = Math.max(0.004, p95 * 0.18);
+  const vad = new Uint8Array(frames);
+  for (let f = 0; f < frames; f++) vad[f] = rms[f] > thr ? 1 : 0;
+  closeGaps(vad, 6); removeBlips(vad, 3);
+  const raw = Array.from(f0, (h, f) => vad[f] && h ? h : 0);
+  const hz = raw.map((h, f) => {
+    if (!h) return 0;
+    const win = []; for (let k = f - 2; k <= f + 2; k++) if (raw[k] > 0) win.push(raw[k]);
+    win.sort((a, b) => a - b);
+    return Math.round(win[Math.floor(win.length / 2)] * 10) / 10;
+  });
+  return { hop: HOP, hz, vad: Array.from(vad).join('') };
+}
+
+/* ============================================================
+   Bewertung
+   ============================================================ */
+function norm(s){
+  return String(s).toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function lev(a, b){
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+function textScore(quote, said){
+  if (said == null || !quote) return null;
+  const a = norm(quote), b = norm(said);
+  if (!a) return null; if (!b) return 0;
+  return clamp(100 * (1 - lev(a, b) / Math.max(a.length, b.length)), 0, 100);
+}
+function toSemis(hz){
+  const v = hz.filter(h => h > 0).sort((a, b) => a - b);
+  if (v.length < 5) return null;
+  const med = v[Math.floor(v.length / 2)];
+  return hz.map(h => h > 0 ? 12 * Math.log2(h / med) : null);
+}
+function compareProfiles(ref, usr){
+  const rv = ref.vad.split('').map(Number), uv = usr.vad.split('').map(Number);
+  const refSpeech = rv.reduce((a, b) => a + b, 0), usrSpeech = uv.reduce((a, b) => a + b, 0);
+  let best = { lag: 0, iou: -1 };
+  for (let lag = -15; lag <= 15; lag++) {
+    let inter = 0, uni = 0;
+    const n = Math.max(rv.length, uv.length);
+    for (let i = 0; i < n; i++) {
+      const r = rv[i] || 0, j = i + lag, u = j >= 0 && j < uv.length ? uv[j] : 0;
+      if (r && u) inter++; if (r || u) uni++;
+    }
+    const iou = uni ? inter / uni : 0;
+    if (iou > best.iou || (iou === best.iou && Math.abs(lag) < Math.abs(best.lag))) best = { lag, iou };
+  }
+  let timing = null;
+  if (refSpeech >= 5) timing = usrSpeech < 5 ? 0 : clamp(100 * best.iou / 0.7 - Math.abs(best.lag) * 1.5, 0, 100);
+
+  let pitch = null;
+  const rs = toSemis(ref.hz), us = toSemis(usr.hz);
+  if (rs) {
+    if (!us) pitch = 0;
+    else {
+      let sum = 0, cnt = 0;
+      for (let i = 0; i < rs.length; i++) {
+        const j = i + best.lag;
+        if (j < 0 || j >= us.length) continue;
+        if (rs[i] != null && us[j] != null) { sum += Math.abs(rs[i] - us[j]); cnt++; }
+      }
+      if (cnt < 8) pitch = 0;
+      else {
+        const md = sum / cnt;
+        const refVoiced = rs.filter(x => x != null).length;
+        const coverage = Math.min(1, cnt / (refVoiced * 0.5));
+        pitch = clamp(100 * (1 - (md - 0.7) / 3.3), 0, 100) * coverage;
+      }
+    }
+  }
+  return { timing, pitch, lag: best.lag };
+}
+function overallScore(s){
+  const parts = [[s.text, 0.4], [s.timing, 0.3], [s.pitch, 0.3]].filter(p => p[0] != null);
+  if (!parts.length) return null;
+  const w = parts.reduce((a, p) => a + p[1], 0);
+  return Math.round(parts.reduce((a, p) => a + p[0] * p[1], 0) / w);
+}
+
+/* ============================================================
+   Sprech-Timing (Cues): wann wird was gesagt?
+   cue = { s: Start, e: Ende (Sekunden ab Clip-Start), t: Text }
+   ============================================================ */
+/* Verteilt die Wörter des Spruchs anteilig nach Dauer auf die Abschnitte */
+function distributeText(segs, quote){
+  const words = String(quote || '').split(/\s+/).filter(Boolean);
+  const total = segs.reduce((a, s) => a + s.e - s.s, 0) || 1;
+  let acc = 0, wi = 0;
+  return segs.map((s, k) => {
+    acc += s.e - s.s;
+    const upto = k === segs.length - 1 ? words.length : Math.max(wi, Math.round(words.length * acc / total));
+    const t = words.slice(wi, upto).join(' '); wi = upto;
+    return { s: Math.round(s.s * 100) / 100, e: Math.round(s.e * 100) / 100, t };
+  });
+}
+/* Sprechphasen aus einem Tonhöhen-Profil ableiten */
+function profileToCues(profile, quote){
+  const v = profile.vad, segs = [];
+  for (let i = 0; i < v.length;) {
+    if (v[i] === '1') { let j = i; while (j < v.length && v[j] === '1') j++; segs.push({ s: i * HOP, e: j * HOP }); i = j; }
+    else i++;
+  }
+  const merged = [];
+  for (const s of segs) {
+    const last = merged[merged.length - 1];
+    if (last && s.s - last.e < 0.3) last.e = s.e; else merged.push({ ...s });
+  }
+  return distributeText(merged.filter(s => s.e - s.s >= 0.15), quote);
+}
+/* Für Clips ohne Audio-Profil: Cues als Timing-Referenz verwenden */
+function cuesToProfile(clip){
+  if (!clip.cues || !clip.cues.length) return null;
+  const n = Math.round((clip.end - clip.start) / HOP), v = new Array(n).fill(0);
+  for (const c of clip.cues) for (let i = Math.floor(c.s / HOP); i < Math.min(n, Math.ceil(c.e / HOP)); i++) v[i] = 1;
+  return { hop: HOP, hz: new Array(n).fill(0), vad: v.join('') };
+}
+function cueHTML(clip){
+  const dur = clip.end - clip.start;
+  return `<div class="cue">
+    <div class="track">${(clip.cues || []).map(c => `<i style="left:${c.s / dur * 100}%;width:${(c.e - c.s) / dur * 100}%"></i>`).join('')}<b id="cuehead" style="left:0"></b></div>
+    <div class="signal" id="cuesig"></div>
+    <div class="lyric" id="cuelyric"></div>
+  </div>`;
+}
+function updateCue(clip, t, showText){
+  const head = $('#cuehead'); if (!head) return;
+  const dur = clip.end - clip.start;
+  head.style.left = clamp(t / dur * 100, 0, 100) + '%';
+  const cues = clip.cues || [], sig = $('#cuesig'), ly = $('#cuelyric');
+  const cur = cues.find(c => t >= c.s && t < c.e), next = cues.find(c => c.s > t);
+  if (cur) {
+    sig.className = 'signal now'; sig.textContent = '🎙️ JETZT';
+    if (showText) {
+      const w = cur.t.split(/\s+/).filter(Boolean);
+      const k = Math.ceil((t - cur.s) / (cur.e - cur.s) * w.length);
+      ly.className = 'lyric';
+      ly.innerHTML = `<span class="done">${esc(w.slice(0, k).join(' '))}</span> <span class="todo">${esc(w.slice(k).join(' '))}</span>`;
+    } else ly.innerHTML = '';
+  } else if (next && next.s - t < 1.2) {
+    sig.className = 'signal soon'; sig.textContent = 'Gleich … ' + '●'.repeat(Math.ceil((next.s - t) / 0.4));
+    if (showText) { ly.className = 'lyric next'; ly.textContent = next.t; } else ly.innerHTML = '';
+  } else { sig.textContent = ''; ly.className = 'lyric'; ly.innerHTML = ''; }
+}
+
+/* ============================================================
+   Diagramm: Tonhöhen-Kurve Original vs. Spieler
+   ============================================================ */
+function drawChart(canvas, ref, usr){
+  const dpr = window.devicePixelRatio || 1;
+  const Wd = canvas.getBoundingClientRect().width || canvas.parentElement.clientWidth || 640;
+  const Ht = canvas.getBoundingClientRect().height || 180;
+  canvas.width = Wd * dpr; canvas.height = Ht * dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+  const n = Math.max(ref ? ref.hz.length : 0, usr ? usr.hz.length : 0, 1);
+  const X = i => i / n * Wd, Y = s => Ht / 2 - clamp(s, -9, 9) / 9 * (Ht / 2 - 24);
+  ctx.strokeStyle = '#2c2c3a'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, Ht / 2); ctx.lineTo(Wd, Ht / 2); ctx.stroke();
+  const band = (prof, color, y) => {
+    if (!prof) return; ctx.fillStyle = color;
+    prof.vad.split('').forEach((c, i) => { if (c === '1') ctx.fillRect(X(i), y, Wd / n + 0.5, 5); });
+  };
+  band(ref, 'rgba(77,195,255,.6)', Ht - 14);
+  band(usr, 'rgba(255,77,141,.6)', Ht - 7);
+  const line = (prof, color) => {
+    if (!prof) return; const s = toSemis(prof.hz); if (!s) return;
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.beginPath();
+    let pen = false;
+    s.forEach((v, i) => { if (v == null) { pen = false; return; } pen ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v)); pen = true; });
+    ctx.stroke();
+  };
+  line(ref, '#4dc3ff'); line(usr, '#ff4d8d');
+}
+
+/* ============================================================
+   Sound-Effekte (kleine Synth-Töne, keine Dateien nötig)
+   ============================================================ */
+let soundOn = localStorage.getItem('memecatcher.sound') !== '0';
+function toggleSound(){
+  soundOn = !soundOn; localStorage.setItem('memecatcher.sound', soundOn ? '1' : '0');
+  $('#soundbtn').textContent = soundOn ? '🔊' : '🔇';
+}
+function beep(f = 660, d = 0.12, type = 'square', vol = 0.05, delay = 0){
+  if (!soundOn) return;
+  try {
+    const ctx = getCtx(); if (ctx.state === 'suspended') ctx.resume();
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + delay;
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + d + 0.02);
+  } catch {}
+}
+const sfx = {
+  click: () => beep(620, 0.05, 'triangle', 0.05),
+  tick: () => beep(440, 0.14, 'square', 0.04),
+  win: () => [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.18, 'triangle', 0.07, i * 0.1)),
+  fanfare: () => [392, 523, 659, 784, 659, 784, 1047].forEach((f, i) => beep(f, 0.24, 'square', 0.04, i * 0.13)),
+};
+
+/* ============================================================
+   Effekte: Hochzählen, Konfetti
+   ============================================================ */
+function countUp(el, to, ms = 1000){
+  const t0 = performance.now();
+  (function f(now){
+    const k = Math.min(1, (now - t0) / ms);
+    el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(f);
+  })(t0);
+  setTimeout(() => el.textContent = Math.round(to), ms + 150);
+}
+function confetti(){
+  const cv = document.createElement('canvas'); cv.className = 'confetti'; document.body.appendChild(cv);
+  const ctx = cv.getContext('2d'), W = cv.width = innerWidth, H = cv.height = innerHeight;
+  const ps = Array.from({ length: 180 }, () => ({
+    x: Math.random() * W, y: -20 - Math.random() * H * 0.6, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3,
+    r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.3, c: COLORS[Math.random() * COLORS.length | 0], w: 6 + Math.random() * 6, h: 8 + Math.random() * 10 }));
+  const t0 = performance.now();
+  (function f(now){
+    ctx.clearRect(0, 0, W, H);
+    for (const p of ps) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+    }
+    if (now - t0 < 5500) requestAnimationFrame(f); else cv.remove();
+  })(t0);
+}
+
+/* ============================================================
+   Spieler-Avatare
+   ============================================================ */
+const COLORS = ['#ff3d8b', '#3dc6ff', '#ffd23f', '#36e39a', '#9b6bff', '#ff8a3d', '#00e5c3', '#ff5c5c'];
+const EMOJIS = ['🐸', '🦊', '🐼', '🐙', '🦄', '🐵', '🐧', '🦖', '🐱', '🤖', '👽', '🦁'];
+const avatar = (p, cls = '') => `<span class="avatar ${cls}" style="background:${p.color}">${p.emoji}</span>`;
+
+/* ============================================================
+   Titelbildschirm
+   ============================================================ */
+function renderHome(){
+  if (NET.role) leaveOnline();
+  newToken(); showVideo(false);
+  const timed = clips.filter(c => c.cues?.length).length;
+  panel(`
+    <div class="hero">
+      <span class="floaty" style="left:4%;top:10%">🍝</span>
+      <span class="floaty" style="right:6%;top:4%;animation-delay:-2s">🎙️</span>
+      <span class="floaty" style="left:10%;bottom:0;animation-delay:-4s">😂</span>
+      <span class="floaty" style="right:10%;bottom:6%;animation-delay:-3s">🍅</span>
+      <div class="logo"><span class="l1">MEME</span><span class="l2">CATCHER</span></div>
+      <p class="tagline">Der Clip läuft <b>stumm</b>. Du sprichst das Meme ein – Text, Timing, Tonlage. Wer klingt am echtesten?</p>
+      <button class="big" data-choice="play" ${clips.length ? '' : 'disabled'}>🛋️ LOKAL</button>
+      <button class="big pink" data-choice="online">🌐 ONLINE</button><br>
+      <button class="sec" data-choice="edit">🎬 Clips verwalten</button>
+      <p class="hint">${clips.length} Clips · ${timed} mit Timing</p>
+    </div>
+    ${!SR ? `<div class="warn">Dieser Browser hat keine Spracherkennung – der Text wird nicht bewertet. Am besten Chrome oder Edge nutzen.</div>` : ''}
+    ${location.protocol === 'file:' ? `<div class="warn">Die Seite ist direkt als Datei geöffnet. YouTube und Mikrofon funktionieren nur über den lokalen Server (Starten.bat).</div>` : ''}
+    <div class="steps">
+      <div class="step"><div class="ic">🧠</div><b>Mutig oder anhören?</b><span class="hint">Aus dem Gedächtnis gibt's ×1,5 – oder hör dir das Original erst an.</span></div>
+      <div class="step"><div class="ic">🎙️</div><b>Stumm einsprechen</b><span class="hint">Der Clip läuft ohne Ton, du bist die Stimme. Timeline-Hilfe kostet 30 %.</span></div>
+      <div class="step"><div class="ic">🏆</div><b>Vergleichen</b><span class="hint">Alle Versionen anhören, die lustigste wählen, Original aufdecken. Lokal am Sofa oder online per Einladungslink.</span></div>
+    </div>`);
+  choose().then(c => c === 'play' ? renderSetup() : c === 'online' ? renderOnline() : renderEditor());
+}
+
+/* ============================================================
+   Clip-Editor
+   ============================================================ */
+function renderEditor(editId = null){
+  newToken(); showVideo(true);
+  const c = editId ? clips.find(x => x.id === editId) : null;
+  panel(`
+    <div class="card">
+      <h2>${c ? 'Clip bearbeiten' : 'Neuen Clip hinzufügen'}</h2>
+      <label>Titel (wird im Spiel als Hinweis angezeigt)</label>
+      <input id="f-title" value="${esc(c?.title)}" placeholder="z. B. Nudeln warm, Nudeln kalt">
+      <label>YouTube-Link</label>
+      <input id="f-url" value="${c ? 'https://youtu.be/' + c.videoId : ''}" placeholder="https://www.youtube.com/watch?v=…">
+      <div class="row">
+        <div><label>Start (Sekunden oder m:ss)</label><input id="f-start" value="${c ? fmtTime(c.start) : ''}" placeholder="0:42"></div>
+        <div><label>Ende</label><input id="f-end" value="${c ? fmtTime(c.end) : ''}" placeholder="0:48"></div>
+      </div>
+      <label>Originalspruch (genau wie gesprochen)</label>
+      <textarea id="f-quote" rows="2" placeholder="Was im Clip gesagt wird">${esc(c?.quote)}</textarea>
+      <label>Sprech-Timing – wann wird was gesagt? (wichtig, damit Spieler wissen, wann sie einsetzen)</label>
+      <div id="f-cues"></div>
+      <div id="f-markbtn"></div>
+      <button class="sec" data-choice="mark">⏺ Timing markieren</button>
+      <span class="hint">Der Clip läuft mit Ton – halte die <b>Leertaste</b> (oder den großen Knopf) gedrückt, solange gesprochen wird.</span>
+      <label>Audiodatei des Originals (optional, für Timing- und Tonlagen-Bewertung)</label>
+      <input id="f-file" type="file" accept="audio/*,video/*">
+      <div class="row">
+        <div><label>Die Datei beginnt bei Videosekunde</label><input id="f-offset" value="0"></div>
+        <div><p class="hint" style="margin-top:30px">0 = Datei ist das ganze Video. Ist die Datei schon genau der Ausschnitt, trage hier den Start ein.</p></div>
+      </div>
+      ${c?.profile ? '<p class="hint">✓ Dieser Clip hat bereits ein Tonhöhen-Profil. Ohne neue Datei bleibt es erhalten (außer du änderst Start/Ende).</p>' : ''}
+      <div id="f-msg"></div>
+      <button data-choice="preview" class="sec">▶ Ausschnitt mit Ton testen</button>
+      <button data-choice="save">${c ? 'Änderungen speichern' : 'Clip speichern'}</button>
+      ${c ? '<button data-choice="cancel" class="sec">Abbrechen</button>' : ''}
+    </div>
+    <div class="card">
+      <h3>Deine Clips (${clips.length})</h3>
+      ${clips.length ? clips.map(x => `
+        <div class="cliprow">
+          <div>
+            <b>${esc(x.title || '(ohne Titel)')}</b>
+            ${x.cues?.length ? '<span class="badge ok">Timing ✓</span>' : '<span class="badge">kein Timing</span>'}
+            ${x.profile ? '<span class="badge ok">Tonlage ✓</span>' : ''}
+            <div class="hint">${fmtTime(x.start)} – ${fmtTime(x.end)} · ${esc(x.videoId)}</div>
+            <div class="quote">„${esc(x.quote)}“</div>
+          </div>
+          <div style="white-space:nowrap">
+            <button class="sec small" data-choice="edit:${x.id}">Bearbeiten</button>
+            <button class="danger small" data-choice="del:${x.id}">Löschen</button>
+          </div>
+        </div>`).join('') : '<p class="hint">Noch keine Clips.</p>'}
+      <div style="margin-top:10px">
+        <button class="sec small" data-choice="export" ${clips.length ? '' : 'disabled'}>Clips exportieren (JSON)</button>
+        <button class="sec small" data-choice="import">Clips importieren</button>
+        <button class="sec small" data-choice="starter">Deutsches Starterpaket hinzufügen</button>
+        <input id="f-import" type="file" accept=".json,application/json" style="display:none">
+      </div>
+    </div>`);
+
+  /* Entwurf der Cues – gehört zu einem bestimmten Ausschnitt (Video + Start/Ende) */
+  let draftCues = c?.cues ? c.cues.map(x => ({ ...x })) : [];
+  let draftFor = c ? { videoId: c.videoId, start: c.start, end: c.end } : null;
+  const syncCues = () => document.querySelectorAll('[data-cue]').forEach(inp => { const q = draftCues[+inp.dataset.cue]; if (q) q.t = inp.value; });
+  const renderCues = () => {
+    $('#f-cues').innerHTML = draftCues.length
+      ? draftCues.map((q, k) => `<div class="cuerow"><span>${q.s.toFixed(1)} – ${q.e.toFixed(1)} s</span>
+          <input data-cue="${k}" value="${esc(q.t)}" placeholder="Text in diesem Abschnitt">
+          <button class="danger small" data-choice="cuedel:${k}">✕</button></div>`).join('')
+      : '<p class="hint">Noch kein Timing markiert.</p>';
+  };
+  renderCues();
+
+  $('#f-url').oninput = e => { const t = parseUrlStart(e.target.value); if (t != null && !$('#f-start').value) $('#f-start').value = fmtTime(t); };
+  const msg = (html, cls = 'err') => $('#f-msg').innerHTML = html ? `<div class="${cls}">${html}</div>` : '';
+
+  const readForm = () => {
+    const videoId = parseVideoId($('#f-url').value);
+    const start = parseTime($('#f-start').value), end = parseTime($('#f-end').value);
+    if (!videoId) throw new Error('Der YouTube-Link wurde nicht erkannt.');
+    if (isNaN(start) || isNaN(end) || end <= start) throw new Error('Start und Ende prüfen – das Ende muss nach dem Start liegen.');
+    if (end - start > 30) throw new Error('Bitte maximal 30 Sekunden pro Clip.');
+    return { videoId, start, end, title: $('#f-title').value.trim(), quote: $('#f-quote').value.trim() };
+  };
+
+  (async function loop(){
+    while (true) {
+      const ch = await choose();
+      if (ch === 'cancel') return renderEditor();
+      if (ch.startsWith('edit:')) return renderEditor(ch.slice(5));
+      if (ch.startsWith('del:')) {
+        const x = clips.find(y => y.id === ch.slice(4));
+        if (x && confirm(`„${x.title || x.quote}“ löschen?`)) { clips = clips.filter(y => y !== x); saveClips(); }
+        return renderEditor(editId && editId !== ch.slice(4) ? editId : null);
+      }
+      if (ch === 'export') {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(clips, null, 1)], { type: 'application/json' }));
+        a.download = 'meme-catcher-clips.json'; a.click();
+        continue;
+      }
+      if (ch.startsWith('cuedel:')) { syncCues(); draftCues.splice(+ch.slice(7), 1); renderCues(); continue; }
+      if (ch === 'starter') {
+        try { const n = await loadStarter(); alert(n ? n + ' Clips hinzugefügt.' : 'Alle Starter-Clips sind schon da.'); }
+        catch { alert('Starterpaket konnte nicht geladen werden (läuft die Seite über den Server?).'); }
+        return renderEditor();
+      }
+      if (ch === 'import') {
+        const inp = $('#f-import');
+        inp.onchange = async () => {
+          try {
+            const data = JSON.parse(await inp.files[0].text());
+            if (!Array.isArray(data)) throw 0;
+            let added = 0;
+            for (const x of data) if (x && x.videoId && x.end > x.start) { clips.push({ ...x, id: uid() }); added++; }
+            saveClips(); alert(added + ' Clips importiert.'); renderEditor();
+          } catch { alert('Die Datei konnte nicht gelesen werden.'); }
+        };
+        inp.click();
+        continue;
+      }
+      try {
+        msg('');
+        const f = readForm();
+        setBusy(true);
+        if (ch === 'preview') { await playSegment(f, { muted: false }); setBusy(false); continue; }
+        if (ch === 'mark') {
+          if (document.activeElement) document.activeElement.blur();
+          const segs = []; let open = null, cur = 0;
+          $('#f-markbtn').innerHTML = '<button id="holdbtn">🎙️ Gedrückt halten, solange gesprochen wird (oder Leertaste)</button>';
+          const hb = $('#holdbtn');
+          const down = () => { if (open == null) { open = cur; hb.style.background = 'var(--ok)'; } };
+          const up = () => {
+            if (open == null) return;
+            // Reaktionszeit ausgleichen: Menschen drücken ca. 0,15 s zu spät
+            const s = Math.max(0, open - 0.15), e = Math.max(s + 0.1, cur - 0.1);
+            if (cur - open > 0.08) segs.push({ s, e });
+            open = null; hb.style.background = '';
+          };
+          const kd = e => { if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) down(); } };
+          const ku = e => { if (e.code === 'Space') { e.preventDefault(); up(); } };
+          window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+          hb.onpointerdown = e => { e.preventDefault(); down(); }; hb.onpointerup = up; hb.onpointerleave = up;
+          try { await playSegment(f, { muted: false, onTick: t => cur = t }); }
+          finally {
+            cur = f.end - f.start; up();
+            window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku);
+            $('#f-markbtn').innerHTML = '';
+          }
+          if (!segs.length) throw new Error('Nichts markiert – halte die Leertaste gedrückt, solange im Clip gesprochen wird.');
+          draftCues = distributeText(segs, f.quote); draftFor = { videoId: f.videoId, start: f.start, end: f.end };
+          renderCues();
+          msg('✓ Timing markiert. Prüfe, ob der Text pro Abschnitt passt, und speichere dann.', 'warn');
+          setBusy(false); continue;
+        }
+        if (ch === 'save') {
+          if (!f.quote) throw new Error('Bitte den Originalspruch eintragen.');
+          let profile = c?.profile || null;
+          if (c && (c.start !== f.start || c.end !== f.end || c.videoId !== f.videoId)) profile = null;
+          const file = $('#f-file').files[0];
+          if (file) {
+            msg('Audiodatei wird analysiert…', 'warn');
+            const offset = parseTime($('#f-offset').value) || 0;
+            const buf = await decodeBlob(file);
+            if (f.start - offset < 0 || f.end - offset > buf.duration + 0.5) throw new Error(`Der Ausschnitt liegt außerhalb der Audiodatei (Datei ist ${fmtTime(buf.duration)} lang, beginnt bei Videosekunde ${offset}).`);
+            profile = analyzeSamples(await toMono16k(buf, f.start - offset, f.end - offset));
+            if (!profile.vad.includes('1')) throw new Error('In diesem Ausschnitt der Audiodatei wurde keine Sprache gefunden. Stimmen Start, Ende und Versatz?');
+          }
+          syncCues();
+          let cues = draftCues;
+          if (draftFor && (draftFor.videoId !== f.videoId || draftFor.start !== f.start || draftFor.end !== f.end)) cues = [];
+          if (!cues.length && profile) cues = profileToCues(profile, f.quote);
+          if (c) Object.assign(c, f, { profile, cues }); else clips.push({ id: uid(), ...f, profile, cues });
+          saveClips();
+          return renderEditor();
+        }
+      } catch (e) { msg(esc(e.message || e)); setBusy(false); }
+    }
+  })();
+}
+
+/* ============================================================
+   Ablauf-Steuerung
+   Jeder neue Bildschirm-Ablauf holt sich ein "Token". Startet ein neuer
+   Ablauf (z. B. weil online die nächste Phase kommt), brechen ältere ab.
+   ============================================================ */
+let TOKEN = 0;
+const STALE = new Error('stale');
+const newToken = () => ++TOKEN;
+async function G(p, tok){
+  let v;
+  try { v = await p; } catch (e) { if (tok !== TOKEN) throw STALE; throw e; }
+  if (tok !== TOKEN) throw STALE;
+  return v;
+}
+const ensure = tok => { if (tok !== TOKEN) throw STALE; };
+
+/* ============================================================
+   Lobby (lokales Spiel an einem Gerät)
+   ============================================================ */
+let lobby = (() => {
+  try { const x = JSON.parse(localStorage.getItem('memecatcher.lobby')); if (Array.isArray(x) && x.length && x[0].emoji) return x; } catch {}
+  return [{ name: 'Spieler 1', color: COLORS[0], emoji: EMOJIS[0] }];
+})();
+const saveLobby = () => localStorage.setItem('memecatcher.lobby', JSON.stringify(lobby));
+let lobbyRounds = 5, lobbyShowTitle = true;
+
+function renderSetup(anim = true){
+  newToken(); showVideo(false);
+  const maxR = clips.length; lobbyRounds = clamp(lobbyRounds, 1, maxR);
+  panel(`
+    <div class="card">
+      <div class="kicker">Lokales Spiel</div>
+      <h2>Wer spielt mit?</h2>
+      <p class="hint">Alle spielen nacheinander an diesem Gerät. Tipp auf einen Avatar, um ihn zu wechseln.</p>
+      <div>${lobby.map((p, i) => `
+        <div class="prow">
+          <button class="avatar" data-choice="av:${i}" style="background:${p.color}">${p.emoji}</button>
+          <input data-pname="${i}" value="${esc(p.name)}" maxlength="16" placeholder="Name">
+          ${lobby.length > 1 ? `<button class="sec small" data-choice="rm:${i}">✕</button>` : ''}
+        </div>`).join('')}</div>
+      ${lobby.length < 8 ? '<button class="sec small" data-choice="add">＋ Spieler hinzufügen</button>' : ''}
+      <div class="row" style="margin-top:10px;align-items:flex-end">
+        <div><label>Runden</label>
+          <div class="stepper"><button class="sec" data-choice="r-">−</button><b>${lobbyRounds}</b><button class="sec" data-choice="r+">+</button><span class="hint">von ${maxR} Clips</span></div></div>
+        <div><label class="switch"><input type="checkbox" id="s-title" ${lobbyShowTitle ? 'checked' : ''}><i></i> Titel als Hinweis zeigen</label></div>
+      </div>
+      <div id="s-msg"></div>
+      <div class="center" style="margin-top:14px">
+        <button class="big" data-choice="go">LOS GEHT'S</button><br>
+        <button class="sec small" data-choice="back">← Zurück</button>
+      </div>
+    </div>`, anim);
+  const sync = () => {
+    document.querySelectorAll('[data-pname]').forEach(i => lobby[+i.dataset.pname].name = i.value.trim());
+    lobbyShowTitle = $('#s-title').checked; saveLobby();
+  };
+  const err = m => $('#s-msg').innerHTML = `<div class="err">${m}</div>`;
+  (async () => {
+    while (true) {
+      const ch = await choose(); sync();
+      if (ch === 'back') return renderHome();
+      if (ch === 'add') {
+        const uc = new Set(lobby.map(p => p.color)), ue = new Set(lobby.map(p => p.emoji));
+        lobby.push({ name: 'Spieler ' + (lobby.length + 1), color: COLORS.find(c => !uc.has(c)) || COLORS[0], emoji: EMOJIS.find(e => !ue.has(e)) || EMOJIS[0] });
+        return renderSetup(false);
+      }
+      if (ch.startsWith('rm:')) { lobby.splice(+ch.slice(3), 1); return renderSetup(false); }
+      if (ch.startsWith('av:')) {
+        const p = lobby[+ch.slice(3)];
+        p.emoji = EMOJIS[(EMOJIS.indexOf(p.emoji) + 1) % EMOJIS.length];
+        document.querySelector(`[data-choice="${ch}"]`).textContent = p.emoji; sync(); continue;
+      }
+      if (ch === 'r-' || ch === 'r+') { lobbyRounds = clamp(lobbyRounds + (ch === 'r+' ? 1 : -1), 1, maxR); return renderSetup(false); }
+      if (ch === 'go') {
+        const names = lobby.map(p => p.name);
+        if (names.some(n => !n)) { err('Jeder Spieler braucht einen Namen.'); continue; }
+        if (new Set(names).size !== names.length) { err('Jeder Name nur einmal.'); continue; }
+        try { await getMic(); } catch { err('Kein Zugriff aufs Mikrofon – bitte im Browser erlauben.'); continue; }
+        return runGame({ players: lobby.map(p => ({ ...p, id: p.name })), rounds: lobbyRounds, showTitle: lobbyShowTitle });
+      }
+    }
+  })();
+}
+
+/* ============================================================
+   Gemeinsame Bausteine (lokal + online)
+   ============================================================ */
+const MULT = { memory: 1.5, listen: 1, relisten: 0.8 };
+const MODE_LABEL = { memory: '🧠 Gedächtnis ×1,5', listen: '👂 Angehört ×1', relisten: '👂👂 Nochmal gehört ×0,8' };
+const fmtF = f => '×' + (Math.round(f * 100) / 100).toString().replace('.', ',');
+const transcriptText = t => t.transcript == null ? '(keine Spracherkennung)' : t.transcript ? '„' + esc(t.transcript) + '“' : '(nichts erkannt)';
+const takePoints = (t, funny) => (t && t.s ? Math.round((t.s.total || 0) * MULT[t.mode] * (t.help ? HELP_FACTOR : 1)) : 0) + (funny ? 15 : 0);
+
+function roundHead(clip, r, n, settings){
+  return `<div class="kicker">Runde ${r} / ${n}</div><h2>${settings.showTitle && clip.title ? esc(clip.title) : 'Welches Meme ist das? 🤔'}</h2>`;
+}
+function introHTML(clip, r, n, settings, button = '<button class="big" data-choice="go">WEITER</button>'){
+  return `<div class="banner">
+    <div class="kicker">Runde</div><div class="bigtxt">${r} / ${n}</div>
+    <h2 style="margin-top:16px">${settings.showTitle && clip.title ? esc(clip.title) : 'Welches Meme ist das? 🤔'}</h2>
+    <p class="hint">${Math.round(clip.end - clip.start)} Sekunden · ${clip.cues && clip.cues.length ? 'Timeline verfügbar' : 'ohne Timeline'}</p>
+    ${button}</div>`;
+}
+async function listenOriginal(clip, head, title, tok){
+  panel(`<div class="card center">${head}<h3>${title}</h3><p class="hint">Achte auf Tempo und Betonung!</p></div>`);
+  await G(playSegment(clip, { muted: false }), tok);
+}
+
+/* Ein Spieler nimmt seine Version auf. Gibt die Aufnahme zurück (oder null = übersprungen). */
+async function doTurn(clip, head, p, mode, tok){
+  const hasCues = !!(clip.cues && clip.cues.length);
+  let help = false, first = true;
+  while (true) {
+    ensure(tok);
+    const factor = MULT[mode] * (help ? HELP_FACTOR : 1);
+    panel(`<div class="card">${head}
+      <div class="turn">${avatar(p, 'lg')}<div><div class="kicker">Du bist dran</div><h2>${esc(p.name)}</h2></div></div>
+      <p>Der Clip läuft <b>stumm</b>, die Aufnahme startet automatisch mit dem Video. Sprich synchron mit: Text, Tempo, Tonlage – und Geräusche.</p>
+      <div class="row" style="align-items:center">
+        <div><span class="badge gold">${MODE_LABEL[mode]}</span>${help ? '<span class="badge">👀 Timeline −30 %</span>' : ''}</div>
+        <div style="text-align:right;flex:0 0 auto">Punkte-Faktor <span class="mult">${fmtF(factor)}</span></div>
+      </div>
+      ${hasCues
+        ? `<button class="switch ${help ? 'on' : ''}" data-choice="help"><i></i> 👀 Timeline aufdecken – zeigt <b>wann</b>, nicht was (−30 %)</button>`
+        : '<p class="hint">Für diesen Clip ist noch kein Timing markiert – daher keine Timeline-Hilfe.</p>'}
+      <div class="center" style="margin-top:6px">
+        <button class="big pink" data-choice="rec">🎙️ AUFNEHMEN</button><br>
+        ${mode !== 'memory' ? `<button class="sec" data-choice="relisten">👂 Nochmal anhören${mode === 'listen' ? ' (dann ×0,8)' : ''}</button>` : ''}
+      </div></div>`, first);
+    first = false;
+    const ch = await G(choose(), tok);
+    if (ch === 'help') { help = !help; continue; }
+    if (ch === 'relisten') {
+      mode = 'relisten';
+      try { await listenOriginal(clip, head, `👂 Nochmal für ${esc(p.name)} …`, tok); } catch (e) { if (e === STALE) throw e; }
+      first = true; continue;
+    }
+    const cueBox = help ? cueHTML(clip) : '';
+    for (const c of [3, 2, 1]) {
+      ensure(tok);
+      panel(`<div class="card">${head}<div class="count">${c}</div>${cueBox}</div>`, false);
+      if (help) updateCue(clip, 0, false);
+      sfx.tick(); await G(sleep(800), tok);
+    }
+    panel(`<div class="card center">${head}<p id="recstate" class="hint">Video lädt …</p>${cueBox}</div>`, false);
+    if (help) updateCue(clip, 0, false);
+    try {
+      const take = await G(recordTake(clip, st => {
+        const el = $('#recstate'); if (!el || tok !== TOKEN) return;
+        el.innerHTML = st === 'rec' ? `<span class="recbadge">● REC</span> &nbsp; <b>${esc(p.name)}, los!</b>` : 'Aufnahme beendet, Spracherkennung läuft …';
+      }, help ? t => { if (tok === TOKEN) updateCue(clip, t, false); } : null), tok);
+      panel(`<div class="card center">${head}
+        <div class="turn" style="justify-content:center">${avatar(p)}<h3 style="margin:0">Aufnahme von ${esc(p.name)} ✓</h3></div>
+        <p class="hint">Erkannt: ${transcriptText(take)}</p>
+        <button data-choice="ok">WEITER</button><button class="sec" data-choice="redo">🔁 Nochmal aufnehmen</button></div>`);
+      if ((await G(choose(), tok)) === 'redo') { URL.revokeObjectURL(take.url); first = true; continue; }
+      take.mode = mode; take.help = help;
+      return take;
+    } catch (e) {
+      if (e === STALE) throw e;
+      panel(`<div class="card center">${head}<div class="err">${esc(e.message || e)}</div>
+        <button data-choice="retry">Nochmal versuchen</button><button class="sec" data-choice="skip">Überspringen</button></div>`);
+      if ((await G(choose(), tok)) === 'skip') return null;
+      first = true;
+    }
+  }
+}
+
+/* Aufnahme analysieren und bewerten (füllt take.prof und take.s) */
+async function analyzeTake(clip, take){
+  const ref = clip.profile || cuesToProfile(clip);
+  try { take.prof = analyzeSamples(await toMono16k(await decodeBlob(take.blob))); } catch { take.prof = null; }
+  const cmp = ref && take.prof ? compareProfiles(ref, take.prof) : { timing: null, pitch: null, lag: 0 };
+  take.s = { text: textScore(clip.quote, take.transcript), timing: cmp.timing, pitch: cmp.pitch };
+  take.s.total = overallScore(take.s);
+  return take;
+}
+
+/* Spieler-Version: stummes Video + Aufnahme gleichzeitig */
+async function playVersion(clip, take){
+  const audio = new Audio(take.url);
+  try { await playSegment(clip, { muted: true, onStart: () => audio.play().catch(() => {}) }); }
+  finally { audio.pause(); }
+}
+
+/* Alle Versionen anhören + abstimmen. Gibt 'reveal' zurück, wenn der Knopf im footer gedrückt wurde. */
+async function showcaseLoop(clip, head, players, takes, o, tok){
+  const voteable = players.filter(p => p.id !== o.exclude && takes[p.id]);
+  panel(`<div class="card center">${head}
+    <h3>🔊 Hört euch alle Versionen an</h3>
+    <div class="chips">${players.map((p, i) => takes[p.id]
+      ? `<button class="chip" data-choice="play:${i}">${avatar(p)} ▶ ${esc(p.name)}</button>`
+      : `<span class="chip" style="opacity:.45">${avatar(p)} ${esc(p.name)} – keine Aufnahme</span>`).join('')}</div>
+    ${players.length > 1 ? '<button class="sec" data-choice="all">▶ Alle nacheinander</button>' : ''}
+    ${o.canVote && voteable.length ? `<h3 style="margin-top:18px">😂 Welche Version war die lustigste? <span class="hint">+15 Punkte</span></h3>
+      <div class="chips">${voteable.map(p => `<button class="chip" data-vote="${esc(p.id)}">${avatar(p)} ${esc(p.name)}</button>`).join('')}</div>` : ''}
+    <div style="margin-top:10px">${o.footer}</div></div>`);
+  let sel = null;
+  document.querySelectorAll('[data-vote]').forEach(b => b.onclick = () => {
+    sel = sel === b.dataset.vote ? null : b.dataset.vote;
+    document.querySelectorAll('[data-vote]').forEach(x => x.classList.toggle('on', x.dataset.vote === sel));
+    sfx.click(); o.onVote && o.onVote(sel);
+  });
+  while (true) {
+    const ch = await G(choose(), tok);
+    if (ch === 'reveal' || ch === 'leave') return ch;
+    setBusy(true);
+    const list = (ch === 'all' ? players : [players[+ch.split(':')[1]]]).filter(p => p && takes[p.id]);
+    try { for (const p of list) await G(playVersion(clip, takes[p.id]), tok); } catch (e) { if (e === STALE) throw e; }
+    setBusy(false);
+  }
+}
+
+/* Original aufdecken (mit Karaoke-Text, falls Timing markiert) */
+async function revealOriginal(clip, head, tok){
+  const hasCues = !!(clip.cues && clip.cues.length);
+  panel(`<div class="card center">${head}<h3>🎬 Das Original!</h3>
+    ${hasCues ? cueHTML(clip) : `<p class="quote" style="font-size:22px">„${esc(clip.quote)}“</p>`}</div>`);
+  try { await G(playSegment(clip, { muted: false, onTick: hasCues ? t => { if (tok === TOKEN) updateCue(clip, t, true); } : null }), tok); }
+  catch (e) { if (e === STALE) throw e; }
+}
+
+/* Ergebnis-Bildschirm einer Runde. Gibt den gewählten footer-Knopf zurück ('next', …). */
+async function resultsLoop(clip, head, players, takes, pts, funnyIds, total, footer, tok){
+  const ref = clip.profile || cuesToProfile(clip);
+  const sorted = [...players].sort((a, b) => (pts[b.id] || 0) - (pts[a.id] || 0));
+  const totals = [...players].sort((a, b) => (total[b.id] || 0) - (total[a.id] || 0));
+  const bar = (label, v) => `<span>${label}</span><div class="bar"><i data-w="${v == null ? 0 : v}" style="width:0"></i></div><span>${v == null ? '–' : Math.round(v)}</span>`;
+  panel(`<div class="card center">${head}<p class="quote" style="font-size:18px">„${esc(clip.quote)}“</p>
+      <button class="sec small" data-choice="orig">▶ Original nochmal</button></div>
+    ${sorted.map((p, idx) => { const t = takes[p.id], i = players.indexOf(p), funny = funnyIds.includes(p.id); return `
+      <div class="card">
+        <div class="res">
+          <div class="turn" style="margin:0"><span class="rank">${idx + 1}.</span>${avatar(p)}
+            <div><h3 style="margin:0">${esc(p.name)}</h3>
+              <div>${t ? `<span class="badge gold">${MODE_LABEL[t.mode]}</span>${t.help ? '<span class="badge">👀 −30 %</span>' : ''}` : '<span class="badge">keine Aufnahme</span>'}
+              ${funny ? '<span class="badge pinkb">😂 lustigste +15</span>' : ''}</div></div></div>
+          <div></div>
+          <div><div class="scorebig" data-count="${pts[p.id] || 0}">0</div><div class="hint" style="text-align:right">Punkte</div></div>
+        </div>
+        ${t ? `<p class="hint">Gesagt: ${transcriptText(t)}</p>
+          <div class="bars">${bar('Text', t.s.text)}${bar('Timing', t.s.timing)}${bar('Tonlage', t.s.pitch)}</div>
+          <canvas class="chart" id="cv${i}"></canvas>
+          <div class="legend"><b class="r">━ Original</b> &nbsp; <b class="u">━ ${esc(p.name)}</b> · Linien = Tonhöhen-Melodie, Balken = wann gesprochen wird</div>
+          <button class="sec small" data-choice="play:${i}">▶ Version abspielen</button>` : ''}
+      </div>`; }).join('')}
+    <div class="card center"><div class="kicker">Gesamtstand</div>
+      <div class="totals" style="margin:10px 0 14px">${totals.map(p => `<span>${p.emoji} ${esc(p.name)} · ${total[p.id] || 0}</span>`).join('')}</div>
+      ${footer}</div>`);
+  sfx.win();
+  document.querySelectorAll('[data-count]').forEach(el => countUp(el, +el.dataset.count));
+  setTimeout(() => document.querySelectorAll('.bar>i[data-w]').forEach(i => i.style.width = i.dataset.w + '%'), 60);
+  const redraw = () => players.forEach((p, i) => { const cv = $('#cv' + i); if (cv && takes[p.id]) drawChart(cv, ref, takes[p.id].prof); });
+  redraw(); setTimeout(redraw, 150); window.onresize = redraw;
+  try {
+    while (true) {
+      const ch = await G(choose(), tok);
+      if (ch !== 'orig' && !ch.startsWith('play:')) return ch;
+      setBusy(true);
+      try {
+        if (ch === 'orig') await G(playSegment(clip, { muted: false }), tok);
+        else await G(playVersion(clip, takes[players[+ch.split(':')[1]].id]), tok);
+      } catch (e) { if (e === STALE) throw e; }
+      setBusy(false);
+    }
+  } finally { window.onresize = null; }
+}
+
+/* Endstand mit Podium */
+function renderFinal(players, total, footer){
+  showVideo(false);
+  const sorted = [...players].sort((a, b) => (total[b.id] || 0) - (total[a.id] || 0));
+  const place = [{ h: 170, c: 'linear-gradient(180deg,#ffe27a,#ffb800)', d: 0.5 },
+                 { h: 120, c: 'linear-gradient(180deg,#eef2fb,#a9b3c9)', d: 0.25 },
+                 { h: 85,  c: 'linear-gradient(180deg,#f3b27a,#c2733a)', d: 0 }];
+  const pod = i => { const p = sorted[i]; if (!p) return ''; return `
+    <div class="pod">${avatar(p, 'lg')}<div class="name">${esc(p.name)}</div><div class="pts">${total[p.id] || 0}</div>
+      <div class="block" style="height:${place[i].h}px;background:${place[i].c};animation-delay:${place[i].d}s">${i + 1}</div></div>`; };
+  panel(`<div class="banner">
+      <div class="kicker">Endstand</div>
+      <div class="bigtxt">🏆 ${esc(sorted[0] ? sorted[0].name : '')}</div>
+      <div class="podium">${pod(1)}${pod(0)}${pod(2)}</div>
+      ${sorted.length > 3 ? `<div class="totals" style="margin:12px 0">${sorted.slice(3).map((p, i) => `<span>${i + 4}. ${p.emoji} ${esc(p.name)} · ${total[p.id] || 0}</span>`).join('')}</div>` : ''}
+      <div style="margin-top:18px">${footer}</div>
+    </div>`);
+  confetti(); sfx.fanfare();
+}
+
+/* ============================================================
+   Lokales Spiel (alle an einem Gerät)
+   ============================================================ */
+async function runGame(opts){
+  const tok = newToken();
+  try {
+    const deck = [...clips].sort(() => Math.random() - 0.5).slice(0, opts.rounds);
+    const total = Object.fromEntries(opts.players.map(p => [p.id, 0]));
+    for (let r = 0; r < deck.length; r++) await playRound(deck[r], r + 1, deck.length, opts, total, tok);
+    renderFinal(opts.players, total, '<button class="big" data-choice="again">NOCHMAL</button><br><button class="sec" data-choice="home">Zum Titel</button>');
+    (await G(choose(), tok)) === 'again' ? renderSetup() : renderHome();
+  } catch (e) { if (e !== STALE) throw e; }
+}
+
+async function playRound(clip, r, n, opts, total, tok){
+  const head = roundHead(clip, r, n, opts);
+  const P = opts.players, takes = {};
+
+  showVideo(false);
+  panel(introHTML(clip, r, n, opts));
+  beep(220, 0.25, 'sawtooth', 0.04);
+  await G(choose(), tok);
+  showVideo(true);
+
+  // Wer traut sich aus dem Gedächtnis?
+  const brave = new Set();
+  panel(`<div class="card center">${head}
+    <h3>🧠 Wer traut sich aus dem Gedächtnis?</h3>
+    <p class="hint">Wer mutig ist, spricht <b>vor</b> dem Original ein und bekommt <span class="mult">×1,5</span> Punkte.<br>Alle anderen hören das Original vorher einmal an.</p>
+    <div class="chips">${P.map((p, i) => `<button class="chip" data-tog="${i}">${avatar(p)} ${esc(p.name)}</button>`).join('')}</div>
+    <button class="big" data-choice="go">WEITER</button></div>`);
+  document.querySelectorAll('[data-tog]').forEach(b => b.onclick = () => {
+    const p = P[+b.dataset.tog]; brave.has(p.id) ? brave.delete(p.id) : brave.add(p.id);
+    b.classList.toggle('on'); sfx.click();
+  });
+  await G(choose(), tok);
+
+  // Erst die Mutigen, dann das Original für alle, dann der Rest
+  const order = [...P.filter(p => brave.has(p.id)), ...P.filter(p => !brave.has(p.id))];
+  let listened = false;
+  for (const p of order) {
+    const mode = brave.has(p.id) ? 'memory' : 'listen';
+    if (mode === 'listen' && !listened) {
+      panel(`<div class="card center">${head}<h3>👂 Jetzt hören alle das Original</h3>
+        <p class="hint">Gut zuhören – gleich müsst ihr es nachsprechen.</p>
+        <button class="big" data-choice="go">▶ ORIGINAL ANHÖREN</button></div>`);
+      await G(choose(), tok);
+      try { await listenOriginal(clip, head, '👂 Hört genau hin …', tok); } catch (e) { if (e === STALE) throw e; }
+      listened = true;
+    }
+    const take = await doTurn(clip, head, p, mode, tok);
+    if (take) takes[p.id] = take;
+  }
+
+  panel(`<div class="card center">${head}<div class="spinner"></div><h3>Auswertung läuft …</h3></div>`);
+  for (const id in takes) await G(analyzeTake(clip, takes[id]), tok);
+
+  let funny = null;
+  await showcaseLoop(clip, head, P, takes, {
+    exclude: null, canVote: P.length > 1, onVote: id => funny = id,
+    footer: '<button class="big" data-choice="reveal">🎬 ORIGINAL AUFDECKEN</button>' }, tok);
+  await revealOriginal(clip, head, tok);
+
+  const pts = {};
+  for (const p of P) { pts[p.id] = takePoints(takes[p.id], p.id === funny); total[p.id] += pts[p.id]; }
+  await resultsLoop(clip, head, P, takes, pts, funny ? [funny] : [], total,
+    `<button class="big" data-choice="next">${r < n ? 'NÄCHSTE RUNDE ➜' : 'ZUM ENDSTAND 🏆'}</button>`, tok);
+  for (const id in takes) URL.revokeObjectURL(takes[id].url);
+}
+
+/* ============================================================
+   ONLINE: Räume über PeerJS (WebRTC, direkt zwischen den Geräten)
+   Der Host ist gleichzeitig "Server": er verteilt Phasen und sammelt
+   Aufnahmen und Stimmen. Jeder nimmt am eigenen Gerät auf.
+   ============================================================ */
+const NET = { role: null, peer: null, conns: new Map(), hostConn: null, code: null, players: [], settings: { rounds: 5, showTitle: true }, status: [], cur: null };
+const H = { deck: [], r: 0, n: 0, phase: 'lobby', takes: {}, votes: {}, total: {} };
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const makeCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.random() * CODE_CHARS.length | 0]).join('');
+const peerIdFor = code => 'memecatcher-v1-' + code;
+const inviteLink = code => location.origin + location.pathname + '?room=' + code;
+const myId = () => NET.role === 'host' ? 'host' : (NET.peer && NET.peer.id);
+const isHost = () => NET.role === 'host';
+
+function loadPeerJs(){
+  if (window.Peer) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+    s.onload = res; s.onerror = () => rej(new Error('Online-Modul konnte nicht geladen werden (keine Internetverbindung?).'));
+    document.head.appendChild(s);
+  });
+}
+function openPeer(id){
+  return new Promise((res, rej) => {
+    const p = id ? new Peer(id) : new Peer();
+    const t = setTimeout(() => { rej(new Error('Keine Verbindung zum Vermittlungs-Server.')); try { p.destroy(); } catch {} }, 15000);
+    p.on('open', () => { clearTimeout(t); res(p); });
+    p.on('error', e => { clearTimeout(t); rej(e); });
+  });
+}
+function leaveOnline(){
+  newToken();
+  try { NET.peer && NET.peer.destroy(); } catch {}
+  Object.assign(NET, { role: null, peer: null, conns: new Map(), hostConn: null, code: null, players: [], status: [], cur: null });
+  Object.assign(H, { deck: [], r: 0, n: 0, phase: 'lobby', takes: {}, votes: {}, total: {} });
+  if (location.search) history.replaceState(null, '', location.pathname);
+}
+function onlineMessage(title, text){
+  newToken(); showVideo(false);
+  panel(`<div class="card center"><h2>${title}</h2><p class="hint">${text}</p><button data-choice="home">Zum Titel</button></div>`);
+  choose().then(() => { leaveOnline(); renderHome(); });
+}
+
+/* ---------- Einstieg: Raum erstellen oder beitreten ---------- */
+function renderOnline(prefill = ''){
+  newToken(); showVideo(false);
+  const me = lobby[0];
+  panel(`<div class="card center"><div class="kicker">Online</div><h2>Mit Freunden übers Internet</h2>
+    <p class="hint">Jeder spielt am eigenen Gerät mit eigenem Mikrofon – alle gleichzeitig.</p>
+    <div class="prow" style="max-width:420px;margin:14px auto">
+      <button class="avatar" data-choice="av" style="background:${me.color}">${me.emoji}</button>
+      <input id="o-name" value="${esc(me.name)}" maxlength="16" placeholder="Dein Name"></div>
+    <div id="o-msg"></div>
+    <div class="row" style="margin-top:8px;text-align:left">
+      <div class="card" style="margin:0"><h3>🏠 Neuer Raum</h3><p class="hint">Du bist Host und lädst per Link ein. Gespielt wird mit deinen Clips (${clips.length}).</p>
+        <button data-choice="host" ${clips.length ? '' : 'disabled'}>RAUM ERSTELLEN</button></div>
+      <div class="card" style="margin:0"><h3>🚪 Beitreten</h3><p class="hint">Raum-Code vom Host:</p>
+        <input id="o-code" class="codein" value="${esc(prefill)}" maxlength="5" placeholder="ABCDE">
+        <button class="pink" data-choice="join" style="margin-top:10px">BEITRETEN</button></div>
+    </div>
+    <button class="sec small" data-choice="back" style="margin-top:14px">← Zurück</button></div>`);
+  const msg = (m, cls = 'err') => $('#o-msg').innerHTML = m ? `<div class="${cls}">${m}</div>` : '';
+  (async () => {
+    while (true) {
+      const ch = await choose();
+      me.name = $('#o-name').value.trim(); saveLobby();
+      if (ch === 'back') { leaveOnline(); return renderHome(); }
+      if (ch === 'av') { me.emoji = EMOJIS[(EMOJIS.indexOf(me.emoji) + 1) % EMOJIS.length]; document.querySelector('[data-choice=av]').textContent = me.emoji; saveLobby(); continue; }
+      if (!me.name) { msg('Gib dir zuerst einen Namen.'); continue; }
+      const code = $('#o-code').value.trim().toUpperCase();
+      if (ch === 'join' && code.length !== 5) { msg('Der Raum-Code hat 5 Zeichen.'); continue; }
+      setBusy(true); msg('Verbinde …', 'warn');
+      try {
+        try { await getMic(); } catch { throw new Error('Kein Zugriff aufs Mikrofon – bitte im Browser erlauben.'); }
+        await loadPeerJs();
+        const profile = { name: me.name, color: me.color, emoji: me.emoji };
+        if (ch === 'host') await createHost(profile); else await joinRoom(code, profile);
+        return;
+      } catch (e) { msg(esc(e.message || String(e))); setBusy(false); }
+    }
+  })();
+}
+
+/* ---------- Host ---------- */
+async function createHost(profile){
+  let peer = null, code = null;
+  for (let i = 0; i < 4 && !peer; i++) {
+    code = makeCode();
+    try { peer = await openPeer(peerIdFor(code)); }
+    catch (e) { if (e.type !== 'unavailable-id') throw new Error('Raum konnte nicht erstellt werden: ' + (e.message || e.type)); }
+  }
+  if (!peer) throw new Error('Raum konnte nicht erstellt werden. Bitte nochmal versuchen.');
+  Object.assign(NET, { role: 'host', peer, code, conns: new Map(), players: [{ id: 'host', ...profile }] });
+  NET.settings.rounds = clamp(NET.settings.rounds, 1, clips.length);
+  peer.on('connection', conn => {
+    conn.on('data', m => hostOnData(conn, m));
+    conn.on('close', () => hostDrop(conn.peer));
+    conn.on('error', () => hostDrop(conn.peer));
+  });
+  peer.on('disconnected', () => { try { peer.reconnect(); } catch {} });
+  hostLobby();
+}
+function hostSend(msg){
+  for (const c of NET.conns.values()) if (c.open) { try { c.send(msg); } catch (e) { console.warn(e); } }
+  clientHandle(msg);
+}
+function hostLobby(){ hostSend({ t: 'lobby', players: NET.players, settings: NET.settings, code: NET.code }); }
+function hostOnData(conn, m){
+  const id = conn.peer;
+  if (!m || typeof m !== 'object') return;
+  if (m.t === 'hello') {
+    const fail = text => { conn.send({ t: 'error', msg: text }); setTimeout(() => conn.close(), 600); };
+    if (H.phase !== 'lobby') return fail('Das Spiel läuft schon. Warte, bis der Host zur Lobby zurückkehrt, und tritt dann nochmal bei.');
+    if (NET.players.length >= 8) return fail('Der Raum ist voll (max. 8 Spieler).');
+    let name = String(m.player && m.player.name || 'Gast').slice(0, 16), k = 2;
+    while (NET.players.some(p => p.name === name)) name = String(m.player.name).slice(0, 13) + ' ' + k++;
+    const used = new Set(NET.players.map(p => p.color));
+    const color = used.has(m.player.color) ? (COLORS.find(c => !used.has(c)) || m.player.color) : m.player.color;
+    NET.conns.set(id, conn);
+    NET.players = NET.players.filter(p => p.id !== id).concat({ id, name, color, emoji: String(m.player.emoji || '🙂').slice(0, 4) });
+    return hostLobby();
+  }
+  if (m.t === 'take' && H.phase === 'record' && m.r === H.r && NET.players.some(p => p.id === id)) {
+    H.takes[id] = m.data; return hostStatus();
+  }
+  if (m.t === 'vote' && H.phase === 'showcase' && m.r === H.r && m.for !== id) {
+    if (m.for) H.votes[id] = m.for; else delete H.votes[id];
+    return hostSend({ t: 'votes', n: Object.keys(H.votes).length });
+  }
+}
+function hostDrop(id){
+  if (!NET.conns.has(id)) return;
+  NET.conns.delete(id);
+  NET.players = NET.players.filter(p => p.id !== id);
+  if (H.phase === 'lobby') return hostLobby();
+  hostSend({ t: 'players', players: NET.players });
+  if (H.phase === 'record') hostStatus();
+}
+function hostStatus(){
+  const done = Object.keys(H.takes);
+  hostSend({ t: 'status', done });
+  if (NET.players.every(p => H.takes[p.id])) hostShowcase();
+}
+function hostStart(){
+  H.deck = [...clips].sort(() => Math.random() - 0.5).slice(0, NET.settings.rounds);
+  H.n = H.deck.length; H.r = 0;
+  H.total = Object.fromEntries(NET.players.map(p => [p.id, 0]));
+  hostNextRound();
+}
+function hostNextRound(){
+  H.r++; H.takes = {}; H.votes = {}; H.phase = 'record';
+  const clip = { ...H.deck[H.r - 1] }; delete clip.id;
+  hostSend({ t: 'round', r: H.r, n: H.n, clip, players: NET.players, settings: NET.settings });
+}
+function hostShowcase(){
+  if (H.phase !== 'record') return;
+  H.phase = 'showcase';
+  hostSend({ t: 'showcase', r: H.r, takes: H.takes, players: NET.players });
+}
+function hostReveal(){
+  if (H.phase !== 'showcase') return;
+  H.phase = 'reveal';
+  const count = {};
+  for (const v of Object.values(H.votes)) count[v] = (count[v] || 0) + 1;
+  const max = Math.max(0, ...Object.values(count));
+  const funny = max > 0 ? Object.keys(count).filter(id => count[id] === max) : [];
+  const pts = {};
+  for (const p of NET.players) {
+    const d = H.takes[p.id];
+    pts[p.id] = takePoints(d && !d.skipped ? d : null, funny.includes(p.id));
+    H.total[p.id] = (H.total[p.id] || 0) + pts[p.id];
+  }
+  hostSend({ t: 'reveal', r: H.r, pts, funny, total: H.total, last: H.r >= H.n });
+}
+function hostNext(){
+  if (H.phase !== 'reveal') return;
+  if (H.r < H.n) return hostNextRound();
+  H.phase = 'final';
+  hostSend({ t: 'final', total: H.total, players: NET.players });
+}
+function hostBackToLobby(){ H.phase = 'lobby'; hostLobby(); }
+
+/* ---------- Gast ---------- */
+async function joinRoom(code, profile){
+  const peer = await openPeer(null);
+  const conn = peer.connect(peerIdFor(code), { reliable: true });
+  await new Promise((res, rej) => {
+    const t = setTimeout(() => rej(new Error('Raum „' + code + '“ nicht erreichbar. Stimmt der Code?')), 12000);
+    conn.on('open', () => { clearTimeout(t); res(); });
+    peer.on('error', e => { clearTimeout(t); rej(e.type === 'peer-unavailable' ? new Error('Raum „' + code + '“ nicht gefunden.') : e); });
+  }).catch(e => { try { peer.destroy(); } catch {} throw e; });
+  Object.assign(NET, { role: 'guest', peer, hostConn: conn, code });
+  conn.on('data', m => clientHandle(m));
+  conn.on('close', () => { if (NET.role === 'guest') onlineMessage('Verbindung beendet', 'Der Host hat den Raum verlassen oder die Verbindung ist abgebrochen.'); });
+  conn.send({ t: 'hello', player: profile });
+  panel(`<div class="card center"><div class="spinner"></div><h3>Verbunden – warte auf den Host …</h3></div>`);
+}
+function netSend(msg){
+  if (isHost()) hostOnData({ peer: 'host', send(){}, close(){} }, msg);
+  else if (NET.hostConn && NET.hostConn.open) NET.hostConn.send(msg);
+}
+
+/* ---------- Was jedes Gerät (auch der Host) bei einer Nachricht tut ---------- */
+function clientHandle(m){
+  if (!m || typeof m !== 'object') return;
+  switch (m.t) {
+    case 'lobby': NET.players = m.players; NET.settings = m.settings; NET.code = m.code; return renderOnlineLobby();
+    case 'error': return onlineMessage('Beitreten nicht möglich', esc(m.msg));
+    case 'round': NET.players = m.players; NET.settings = m.settings; return clientRound(m);
+    case 'status': NET.status = m.done; return updateWaiting();
+    case 'players': NET.players = m.players; return updateWaiting();
+    case 'showcase': NET.players = m.players; return clientShowcase(m);
+    case 'votes': { const el = $('#votecount'); if (el) el.textContent = m.n; return; }
+    case 'reveal': return clientReveal(m);
+    case 'final': return clientFinal(m);
+  }
+}
+
+let lobbyShown = false;
+function renderOnlineLobby(){
+  const tok = newToken(); showVideo(false);
+  const link = inviteLink(NET.code), host = isHost(), me = myId();
+  panel(`<div class="card center">
+    <div class="kicker">Online-Raum</div>
+    <div class="roomcode">${esc(NET.code)}</div>
+    ${host ? `<p class="hint">Schick deinen Freunden diesen Einladungslink:</p>
+      <div class="invite"><input readonly id="invlink" value="${esc(link)}"><button data-choice="copy" id="copybtn">📋 Kopieren</button></div>
+      ${navigator.share ? '<button class="sec small" data-choice="share">📤 Teilen …</button>' : ''}`
+      : '<p class="hint">Du bist drin! Warte, bis der Host das Spiel startet.</p>'}
+    <h3 style="margin-top:18px">Spieler (${NET.players.length}/8)</h3>
+    <div class="chips">${NET.players.map(p => `<span class="chip">${avatar(p)} ${esc(p.name)}${p.id === 'host' ? ' 👑' : ''}${p.id === me ? ' <span class="hint">(du)</span>' : ''}</span>`).join('')}</div>
+    ${host ? `<div class="row" style="margin-top:10px;align-items:flex-end;text-align:left">
+        <div><label>Runden</label><div class="stepper"><button class="sec" data-choice="r-">−</button><b>${NET.settings.rounds}</b><button class="sec" data-choice="r+">+</button><span class="hint">von ${clips.length} Clips</span></div></div>
+        <div><button class="switch ${NET.settings.showTitle ? 'on' : ''}" data-choice="title"><i></i> Titel als Hinweis zeigen</button></div>
+      </div>
+      <button class="big" data-choice="start" style="margin-top:14px">SPIEL STARTEN</button>`
+      : `<div class="hint" style="margin-top:8px">Runden: ${NET.settings.rounds} · Titel-Hinweis: ${NET.settings.showTitle ? 'an' : 'aus'}</div><div class="spinner"></div>`}
+    <br><button class="sec small" data-choice="leave">Raum verlassen</button>
+  </div>`, !lobbyShown);
+  lobbyShown = true;
+  (async () => {
+    try {
+      while (true) {
+        const ch = await G(choose(), tok);
+        if (ch === 'leave') { lobbyShown = false; leaveOnline(); return renderHome(); }
+        if (ch === 'copy') {
+          try { await navigator.clipboard.writeText(link); } catch { $('#invlink').select(); document.execCommand('copy'); }
+          $('#copybtn').textContent = '✓ Kopiert!'; continue;
+        }
+        if (ch === 'share') { try { await navigator.share({ title: 'Meme Catcher', text: 'Spiel mit mir Meme Catcher!', url: link }); } catch {} continue; }
+        if (ch === 'r-' || ch === 'r+') { NET.settings.rounds = clamp(NET.settings.rounds + (ch === 'r+' ? 1 : -1), 1, clips.length); return hostLobby(); }
+        if (ch === 'title') { NET.settings.showTitle = !NET.settings.showTitle; return hostLobby(); }
+        if (ch === 'start') { lobbyShown = false; return hostStart(); }
+      }
+    } catch (e) { if (e !== STALE) throw e; }
+  })();
+}
+
+async function clientRound(m){
+  const tok = newToken();
+  const clip = m.clip, head = roundHead(clip, m.r, m.n, m.settings);
+  NET.cur = { clip, r: m.r, n: m.n, head, takes: {} }; NET.status = [];
+  const me = NET.players.find(p => p.id === myId()) || { name: '?', emoji: '🙂', color: COLORS[0] };
+  try {
+    showVideo(false);
+    panel(introHTML(clip, m.r, m.n, m.settings));
+    beep(220, 0.25, 'sawtooth', 0.04);
+    await G(choose(), tok);
+    showVideo(true);
+    panel(`<div class="card center">${head}
+      <div class="turn" style="justify-content:center">${avatar(me, 'lg')}<div style="text-align:left"><div class="kicker">Deine Wahl</div><h2>${esc(me.name)}</h2></div></div>
+      <div class="modes">
+        <button class="mode" data-choice="memory"><span class="t">🧠 Aus dem Gedächtnis</span><span class="d">Original nicht anhören – Punkte ×1,5</span></button>
+        <button class="mode sec" data-choice="listen"><span class="t">👂 Erst anhören</span><span class="d">Original einmal anhören – Punkte ×1</span></button>
+      </div></div>`);
+    let mode = await G(choose(), tok);
+    if (mode === 'listen') {
+      try { await listenOriginal(clip, head, '👂 Hör genau hin …', tok); } catch (e) { if (e === STALE) throw e; }
+    }
+    const take = await doTurn(clip, head, me, mode, tok);
+    let data = { skipped: true };
+    if (take) {
+      panel(`<div class="card center">${head}<div class="spinner"></div><h3>Auswertung läuft …</h3></div>`);
+      await G(analyzeTake(clip, take), tok);
+      data = { mode: take.mode, help: take.help, transcript: take.transcript, s: take.s, prof: take.prof,
+               audio: await take.blob.arrayBuffer(), mime: take.blob.type };
+      URL.revokeObjectURL(take.url);
+    }
+    ensure(tok);
+    netSend({ t: 'take', r: m.r, data });
+    renderWaiting(tok);
+  } catch (e) { if (e !== STALE) { console.error(e); panel(`<div class="card center"><div class="err">${esc(e.message || e)}</div></div>`); } }
+}
+
+function waitListHTML(){
+  return NET.players.map(p => `<span class="chip ${NET.status.includes(p.id) ? 'on' : ''}">${avatar(p)} ${esc(p.name)} ${NET.status.includes(p.id) ? '✓' : '⏳'}</span>`).join('');
+}
+function renderWaiting(tok){
+  panel(`<div class="card center">${NET.cur.head}<h3>✓ Deine Aufnahme ist abgeschickt</h3>
+    <p class="hint">Warte auf die anderen …</p>
+    <div class="chips" id="waitlist">${waitListHTML()}</div>
+    ${isHost() ? '<button class="sec" data-choice="skipwait">Nicht mehr warten ➜</button>' : ''}</div>`);
+  (async () => {
+    try { while (true) { const ch = await G(choose(), tok); if (ch === 'skipwait') hostShowcase(); } }
+    catch (e) { if (e !== STALE) throw e; }
+  })();
+}
+function updateWaiting(){ const el = $('#waitlist'); if (el) el.innerHTML = waitListHTML(); }
+
+async function clientShowcase(m){
+  const tok = newToken(), cur = NET.cur;
+  for (const t of Object.values(cur.takes)) URL.revokeObjectURL(t.url);
+  cur.takes = {};
+  for (const [id, d] of Object.entries(m.takes || {}))
+    if (d && !d.skipped && d.audio) cur.takes[id] = { ...d, url: URL.createObjectURL(new Blob([d.audio], { type: d.mime || 'audio/webm' })) };
+  const footer = isHost()
+    ? `<p class="hint"><span id="votecount">0</span> / ${NET.players.length} haben abgestimmt</p><button class="big" data-choice="reveal">🎬 ORIGINAL AUFDECKEN</button>`
+    : '<p class="hint">Stimm ab! Der Host deckt gleich das Original auf …</p>';
+  try {
+    const r = await showcaseLoop(cur.clip, cur.head, NET.players, cur.takes, {
+      exclude: myId(), canVote: NET.players.length > 1,
+      onVote: id => netSend({ t: 'vote', r: cur.r, for: id }), footer }, tok);
+    if (r === 'reveal' && isHost()) hostReveal();
+  } catch (e) { if (e !== STALE) throw e; }
+}
+
+async function clientReveal(m){
+  const tok = newToken(), cur = NET.cur;
+  try {
+    showVideo(true);
+    await revealOriginal(cur.clip, cur.head, tok);
+    const footer = isHost()
+      ? `<button class="big" data-choice="next">${m.last ? 'ZUM ENDSTAND 🏆' : 'NÄCHSTE RUNDE ➜'}</button>`
+      : '<p class="hint">Warte auf den Host …</p>';
+    const ch = await resultsLoop(cur.clip, cur.head, NET.players, cur.takes, m.pts, m.funny || [], m.total, footer, tok);
+    if (ch === 'next' && isHost()) hostNext();
+  } catch (e) { if (e !== STALE) throw e; }
+}
+
+async function clientFinal(m){
+  const tok = newToken();
+  NET.players = m.players;
+  renderFinal(m.players, m.total, isHost()
+    ? '<button class="big" data-choice="lobby">ZURÜCK ZUR LOBBY</button><br><button class="sec" data-choice="leave">Raum schließen</button>'
+    : '<p class="hint">Der Host kann eine neue Runde starten.</p><button class="sec" data-choice="leave">Raum verlassen</button>');
+  try {
+    const ch = await G(choose(), tok);
+    if (ch === 'lobby') hostBackToLobby();
+    else { leaveOnline(); renderHome(); }
+  } catch (e) { if (e !== STALE) throw e; }
+}
+
+/* ============================================================
+   Start
+   ============================================================ */
+(async () => {
+  $('#soundbtn').textContent = soundOn ? '🔊' : '🔇';
+  if (!clips.length && !localStorage.getItem('memecatcher.starterLoaded')) {
+    try { await loadStarter(); localStorage.setItem('memecatcher.starterLoaded', '1'); } catch {}
+  }
+  const room = new URLSearchParams(location.search).get('room');
+  if (room) renderOnline(room.toUpperCase().slice(0, 5)); else renderHome();
+})();
+</script>
+</body>
+</html>
